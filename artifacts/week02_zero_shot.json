@@ -1,0 +1,12 @@
+{
+  "variant": "zero-shot",
+  "prompt_version": "week02-zero-shot-v1",
+  "hits": {
+    "category": 0,
+    "urgency": 0,
+    "due_date": 5,
+    "quote": 10
+  },
+  "total": 10,
+  "invalid": 0
+}
