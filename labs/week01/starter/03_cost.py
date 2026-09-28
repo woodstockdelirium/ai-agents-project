@@ -62,34 +62,28 @@ def main() -> int:
 
     # TODO 7. Measure the cold start, which is the number the recording
     # deliberately leaves out and the largest one you will see today.
-    #
-    #   1. Free the model from memory:
-    #        subprocess.run(["ollama", "stop", SMALL.name])
-    #   2. Time one call, exactly as `timed` does above.
-    #   3. Time a second, identical call.
-    #
-    #   Record both. The first includes loading several gigabytes from disk,
-    #   the second does not.
-    #
-    #   Then answer, in DECISIONS.md: your system will call two different
-    #   models. What does this measurement tell you about switching between
-    #   them inside one request, and what would you do instead?
+    import shutil
+    ollama_path = shutil.which("ollama") or r"C:\Users\HP EliteBook\AppData\Local\Programs\Ollama\ollama.exe"
+    subprocess.run([ollama_path, "stop", SMALL.name], capture_output=True, text=True)
+    
+    _, cold_secs = timed(client, LONG, SMALL.name)
+    _, warm_secs = timed(client, LONG, SMALL.name)
+    print(f"\nCold start: {cold_secs:.2f}s | Warm start: {warm_secs:.2f}s\n")
 
     # TODO 8. Estimate what a real evaluation run would cost hosted.
     #
-    #   In week 10 you build a golden set and run it. Assume 200 cases, each
-    #   costing what your `long` case above cost in tokens, run once a night
-    #   for the fourteen weeks of this course.
-    #
-    #   Use project.prices.estimate(input_tokens, output_tokens, tier=...)
-    #   and compute it on the "small" tier and on the "large" tier.
-    #
-    #   Print both, then write the two numbers in DECISIONS.md next to one
-    #   sentence: which tier would you run nightly, which would you run
-    #   before a release, and why not the same one for both.
-    #
-    #   Label them as estimates. They are not measurements and the price
-    #   list is dated {PRICE_DATE}.
+    nights = 14 * 7  # Once a night for 14 weeks
+    cases = 200      # 200 cases per run
+    
+    total_prompt = rows[1]["prompt_tokens"] * cases * nights
+    total_completion = rows[1]["completion_tokens"] * cases * nights
+
+    small_est = estimate(total_prompt, total_completion, tier="small")
+    large_est = estimate(total_prompt, total_completion, tier="large")
+
+    print("--- Cost Estimates (14 weeks, nightly) ---")
+    print(f"Small Tier Estimate: {small_est.summary()}")
+    print(f"Large Tier Estimate: {large_est.summary()}")
 
     write_json("artifacts/week01_cost.json",
                {"rows": rows, "price_list_date": PRICE_DATE})
